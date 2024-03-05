@@ -11,8 +11,12 @@ import torch.distributed as dist
 # https://www.h-schmidt.net/FloatConverter/IEEE754.html
 
 # define the e4m3/e5m2 constants
-E4M3_MAX_POS = torch.finfo(torch.float8_e4m3fn).max
-E5M2_MAX_POS = torch.finfo(torch.float8_e5m2).max
+if torch.version.hip:
+    E4M3_MAX_POS = torch.finfo(torch.float8_e4m3fnuz).max
+    E5M2_MAX_POS = torch.finfo(torch.float8_e5m2uz).max
+else:
+    E4M3_MAX_POS = torch.finfo(torch.float8_e4m3fn).max
+    E5M2_MAX_POS = torch.finfo(torch.float8_e5m2).max
 
 FP16_MAX_POS = torch.finfo(torch.float16).max
 
@@ -24,7 +28,7 @@ EPS = 1e-12
 @torch.no_grad()
 def amax_to_scale(amax, float8_dtype, orig_dtype):
     scale = torch.empty_like(amax, dtype=torch.float32)
-    if float8_dtype == torch.float8_e4m3fn:
+    if float8_dtype == torch.float8_e4m3fn or float8_dtype == torch.float8_e4m3fnuz:
         res = E4M3_MAX_POS / torch.clamp(amax, min=EPS)
     else:  # e5m2
         res = E5M2_MAX_POS / torch.clamp(amax, min=EPS)
@@ -93,7 +97,7 @@ def to_fp8_saturated(x, float8_dtype: torch.dtype):
     # tensor has a maximum value of `amax1`, and the current amax value
     # is `amax2`, where `amax1 < amax2`. This is common when using delayed
     # scaling.
-    if float8_dtype == torch.float8_e4m3fn:
+    if float8_dtype == torch.float8_e4m3fn or float8_dtype == torch.float8_e4m3fnuz:
         x = x.clamp(min=-1 * E4M3_MAX_POS, max=E4M3_MAX_POS)
     else:
         x = x.clamp(min=-1 * E5M2_MAX_POS, max=E5M2_MAX_POS)
