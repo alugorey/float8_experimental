@@ -23,6 +23,8 @@ from float8_experimental.float8_linear_utils import (
 )
 from float8_experimental.float8_tensor import Float8Tensor
 
+from float8_experimental.float8_utils import f8_e4m3_t
+
 from torch._dynamo.test_case import TestCase as DynamoTestCase
 from torch._dynamo.testing import CompileCounterWithBackend
 
@@ -139,7 +141,7 @@ class TestGraphBreaks(DynamoTestCase):
             x_fp8 = Float8Tensor.to_float8(
                 x,
                 self.fp8_scale_x,
-                torch.float8_e4m3fn,
+                torch.f8_e4m3_t(),
                 self.fp8_amax_x,
                 emulate=True,  # TODO: I set this to True so that people on A100 can test, but once fix is in, set to False
             )

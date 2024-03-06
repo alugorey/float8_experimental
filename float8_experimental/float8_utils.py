@@ -13,7 +13,7 @@ import torch.distributed as dist
 # define the e4m3/e5m2 constants
 if torch.version.hip:
     E4M3_MAX_POS = torch.finfo(torch.float8_e4m3fnuz).max
-    E5M2_MAX_POS = torch.finfo(torch.float8_e5m2uz).max
+    E5M2_MAX_POS = torch.finfo(torch.float8_e5m2fnuz).max
 else:
     E4M3_MAX_POS = torch.finfo(torch.float8_e4m3fn).max
     E5M2_MAX_POS = torch.finfo(torch.float8_e5m2).max
@@ -24,11 +24,17 @@ FP16_MAX_POS = torch.finfo(torch.float16).max
 # TODO: align this value with NVIDIA's assumptions (current value is a guess)
 EPS = 1e-12
 
+# Helper functions to pick the correct f8 backend implementation
+def f8_e4m3_t():
+    return torch.float8_e4m3fnuz if torch.version.hip else torch.float8_e4m3fn
+
+def f8_e5m2_t():
+    return torch.float8_e5m2fnuz if torch.version.hip else torch.float8_e5m2
 
 @torch.no_grad()
 def amax_to_scale(amax, float8_dtype, orig_dtype):
     scale = torch.empty_like(amax, dtype=torch.float32)
-    if float8_dtype == torch.float8_e4m3fn or float8_dtype == torch.float8_e4m3fnuz:
+    if float8_dtype == f8_e4m3_t():
         res = E4M3_MAX_POS / torch.clamp(amax, min=EPS)
     else:  # e5m2
         res = E5M2_MAX_POS / torch.clamp(amax, min=EPS)
@@ -97,7 +103,7 @@ def to_fp8_saturated(x, float8_dtype: torch.dtype):
     # tensor has a maximum value of `amax1`, and the current amax value
     # is `amax2`, where `amax1 < amax2`. This is common when using delayed
     # scaling.
-    if float8_dtype == torch.float8_e4m3fn or float8_dtype == torch.float8_e4m3fnuz:
+    if float8_dtype == f8_e4m3_t():
         x = x.clamp(min=-1 * E4M3_MAX_POS, max=E4M3_MAX_POS)
     else:
         x = x.clamp(min=-1 * E5M2_MAX_POS, max=E5M2_MAX_POS)

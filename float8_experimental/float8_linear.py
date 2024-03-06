@@ -27,6 +27,8 @@ from float8_experimental.float8_utils import (
     E4M3_MAX_POS,
     E5M2_MAX_POS,
     tensor_to_amax,
+    f8_e4m3_t,
+    f8_e5m2_t,
 )
 
 
@@ -93,13 +95,13 @@ class NoopFwToFloat8E5M2Bw(torch.autograd.Function):
             fp8_amax_history_dL_dY,
             fp8_scale_dL_dY,
             scale_fn_name,
-            torch.float8_e5m2,
+            f8_e5m2_t(),
             is_amax_initialized,
         )
 
         fp8_amax_dL_dY.fill_(tensor_to_amax(go))
 
-        res = to_fp8_no_autograd(go, fp8_scale_dL_dY, torch.float8_e5m2, ctx.emulate)
+        res = to_fp8_no_autograd(go, fp8_scale_dL_dY, f8_e5m2_t(), ctx.emulate)
         empty_grads = None, None, None, None, None, None
         return res, *empty_grads
 
@@ -212,11 +214,11 @@ class Float8LinearMixin(object):
             self.fp8_amax_history_x,
             self.fp8_scale_x,
             scale_fn_name,
-            torch.float8_e4m3fn,
+            f8_e4m3_t(),
             is_amax_initialized,
         )
         x_fp8 = Float8Tensor.to_float8(
-            x, self.fp8_scale_x, torch.float8_e4m3fn, self.fp8_amax_x, self.emulate
+            x, self.fp8_scale_x, f8_e4m3_t(), self.fp8_amax_x, self.emulate
         )
         return x_fp8
 
@@ -230,14 +232,14 @@ class Float8LinearMixin(object):
             self.fp8_amax_history_w,
             self.fp8_scale_w,
             scale_fn_name,
-            torch.float8_e4m3fn,
+            f8_e4m3_t(),
             is_amax_initialized,
         )
 
         w_fp8 = Float8Tensor.to_float8(
             w,
             self.fp8_scale_w,
-            torch.float8_e4m3fn,
+            f8_e4m3_t(),
             self.fp8_amax_w,
             self.emulate,
         )

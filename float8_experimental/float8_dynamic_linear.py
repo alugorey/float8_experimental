@@ -9,7 +9,7 @@ A wrapper around a `torch.nn.Linear` module which does fp8 compute.
 import torch
 
 from float8_experimental.float8_tensor import Float8Tensor, to_fp8_no_autograd
-from float8_experimental.float8_utils import tensor_to_scale
+from float8_experimental.float8_utils import tensor_to_scale, f8_e4m3_t, f8_e5m2_t
 
 
 @torch._dynamo.allow_in_graph
@@ -30,9 +30,9 @@ class NoopFwToFloat8E5M2Bw(torch.autograd.Function):
 
     @staticmethod
     def backward(ctx, gradY):
-        gradY_scale = tensor_to_scale(gradY, torch.float8_e5m2)
+        gradY_scale = tensor_to_scale(gradY, f8_e5m2_t())
         fp8_tensor = to_fp8_no_autograd(
-            gradY, gradY_scale, torch.float8_e5m2, ctx.emulate
+            gradY, gradY_scale, f8_e5m2_t(), ctx.emulate
         )
         return fp8_tensor, None
 
@@ -87,9 +87,9 @@ class Float8DynamicLinear(torch.nn.Linear):
         return y
 
     def cast_to_float8_e4m3fn(self, inpt_tensor: torch.Tensor) -> Float8Tensor:
-        scale = tensor_to_scale(inpt_tensor, torch.float8_e4m3fn)
+        scale = tensor_to_scale(inpt_tensor, f8_e4m3_t())
         return Float8Tensor.to_float8(
-            inpt_tensor, scale, torch.float8_e4m3fn, emulate=self.emulate
+            inpt_tensor, scale, f8_e4m3_t(), emulate=self.emulate
         )
 
     def cast_to_float8_e5m2_bw(self, gradY: torch.Tensor) -> torch.Tensor:
