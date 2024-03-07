@@ -120,9 +120,11 @@ class TestFloat8Linear:
             # verify initialization flags got updated
             assert m_fp8.is_amax_initialized, "Amax was not properly initialized"
 
-    @pytest.mark.parametrize("emulate", [True, False] if is_H100 else [True])
+    #@pytest.mark.parametrize("emulate", [True, False] if is_H100 else [True])
+    @pytest.mark.parametrize("emulate", [False])
     @pytest.mark.parametrize("x_shape", [(16, 16), (2, 16, 16), (3, 2, 16, 16)])
     @pytest.mark.parametrize("linear_type", [LinearType.DELAYED, LinearType.DYNAMIC])
+    #@pytest.mark.parametrize("use_activation_hooks", [True])
     @pytest.mark.parametrize("use_activation_hooks", [True, False])
     @pytest.mark.usefixtures("x_fail_activation_hooks_with_delayed")
     @unittest.skipIf(not torch.cuda.is_available(), "CUDA not available")

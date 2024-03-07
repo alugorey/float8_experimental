@@ -319,6 +319,7 @@ class Float8Linear(Float8LinearMixin, torch.nn.Linear):
         # TODO Follow up! This is a great idea but we need the mixin base to create real
         # Tensors and the Linear base to create empty params
         # with torch.device("meta"):
+        print("FLOAT8_LINEAR FROM_FLOAT")
         new_mod = cls(mod.in_features, mod.out_features, bias=False)
         new_mod.weight = mod.weight
         new_mod.bias = mod.bias

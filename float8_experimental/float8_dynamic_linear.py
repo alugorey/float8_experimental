@@ -107,6 +107,7 @@ class Float8DynamicLinear(torch.nn.Linear):
             emulate (bool): whether to emulate fp8 matmul logic in float32
             use_activation_hooks (bool): whether to use activation hooks for casting to and from float8
         """
+        print("FLOAT8_DYNAMIC_LINEAR_FROM_FLOAT")
         with torch.device("meta"):
             super_kwargs = {
                 "in_features": mod.in_features,

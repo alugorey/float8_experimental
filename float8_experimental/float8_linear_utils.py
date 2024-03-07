@@ -42,14 +42,18 @@ def get_float8_linear(
         emulate: Whether to emulate the fp8 matmul logic in float32.
         use_activation_hooks: Whether to use activation hooks for dynamic linear.
     """
+    print("MADE IT HERE!")
     LINEAR_TYPE_MAP = {
         LinearType.DELAYED: Float8Linear,
         LinearType.DYNAMIC: Float8DynamicLinear,
     }
     if linear_type not in LINEAR_TYPE_MAP:
+        print("FAIL ONE")
         raise ValueError(f"linear_type must be one of {LINEAR_TYPE_MAP.keys()}")
     if use_activation_hooks and linear_type != LinearType.DYNAMIC:
+        print("FAIL TWO")
         raise ValueError("use_activation_hooks is only supported for dynamic linear")
+    print("CHECKPOINT 1")
     return LINEAR_TYPE_MAP[linear_type].from_float(
         copy.deepcopy(linear_ref),
         emulate=emulate,
