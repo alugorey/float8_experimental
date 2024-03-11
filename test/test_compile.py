@@ -141,7 +141,7 @@ class TestGraphBreaks(DynamoTestCase):
             x_fp8 = Float8Tensor.to_float8(
                 x,
                 self.fp8_scale_x,
-                torch.f8_e4m3_t(),
+                f8_e4m3_t(),
                 self.fp8_amax_x,
                 emulate=True,  # TODO: I set this to True so that people on A100 can test, but once fix is in, set to False
             )

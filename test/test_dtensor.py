@@ -13,7 +13,7 @@ import torch
 
 from float8_experimental.float8_dynamic_linear import NoopFwToFloat8E5M2Bw
 from float8_experimental.float8_tensor import Float8Tensor
-from float8_experimental.float8_utils import tensor_to_scale, f8_e4m3_t()
+from float8_experimental.float8_utils import tensor_to_scale, f8_e4m3_t
 from torch.distributed._tensor import distribute_tensor, DTensor, Replicate, Shard
 from torch.distributed.device_mesh import DeviceMesh, init_device_mesh
 from tqdm import tqdm
