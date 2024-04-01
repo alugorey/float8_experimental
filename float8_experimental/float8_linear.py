@@ -24,10 +24,12 @@ from float8_experimental.float8_tensor import Float8Tensor, to_fp8_no_autograd
 
 from float8_experimental.float8_utils import (
     amax_history_to_scale,
-    E4M3_MAX_POS,
-    E5M2_MAX_POS,
     FP8Dtypes,
     tensor_to_amax,
+    fp8_e4m3_t,
+    fp8_e5m2_t,
+    e4m3_max_pos,
+    e5m2_max_pos,
 )
 
 
@@ -139,18 +141,18 @@ class Float8LinearMixin(object):
         self.recipe = delayed_scaling_recipe
         history_len = self.recipe.history_len
 
-        self.register_always_float32_buffer("fp8_amax_x", torch.tensor([E4M3_MAX_POS]))
+        self.register_always_float32_buffer("fp8_amax_x", torch.tensor([e4m3_max_pos()]))
         self.register_always_float32_buffer(
             "fp8_amax_history_x", torch.zeros(history_len)
         )
         self.register_always_float32_buffer("fp8_scale_x", torch.tensor([1.0]))
-        self.register_always_float32_buffer("fp8_amax_w", torch.tensor([E4M3_MAX_POS]))
+        self.register_always_float32_buffer("fp8_amax_w", torch.tensor([e4m3_max_pos()]))
         self.register_always_float32_buffer(
             "fp8_amax_history_w", torch.zeros(history_len)
         )
         self.register_always_float32_buffer("fp8_scale_w", torch.tensor([1.0]))
         self.register_always_float32_buffer(
-            "fp8_amax_dL_dY", torch.tensor([E5M2_MAX_POS])
+            "fp8_amax_dL_dY", torch.tensor([e5m2_max_pos()])
         )
         self.register_always_float32_buffer(
             "fp8_amax_history_dL_dY", torch.zeros(history_len)
@@ -186,8 +188,8 @@ class Float8LinearMixin(object):
         # https://github.com/openxla/stablehlo/blob/main/rfcs/20230321-fp8_fnuz.md
         # fp8_dtype_fw will be the tyep used for casting the activation and weight
         # fp8_dtype_bw will be the typeused for casting the gradient
-        self.fp8_dtype_fw = torch.float8_e4m3fn
-        self.fp8_dtype_bw = torch.float8_e5m2
+        self.fp8_dtype_fw = fp8_e4m3_t()
+        self.fp8_dtype_bw = fp8_e5m2_t()
 
     def register_always_float32_buffer(
         self, name: str, tensor: Optional[torch.Tensor], persistent: bool = True

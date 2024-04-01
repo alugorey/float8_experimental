@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 import torch
 
-from float8_experimental.float8_utils import tensor_to_amax, to_fp8_saturated
+from float8_experimental.float8_utils import tensor_to_amax, to_fp8_saturated, fp8_e4m3_t
 
 from torch.distributed._tensor import DTensor
 
@@ -105,7 +105,7 @@ class ToFloat8ConstrFunc(torch.autograd.Function):
         ctx,
         tensor: torch.Tensor,
         scale: torch.Tensor,
-        float8_dtype=torch.float8_e4m3fn,
+        float8_dtype=fp8_e4m3_t(),
         amax_buffer: Optional[torch.Tensor] = None,
         emulate: bool = False,
     ):

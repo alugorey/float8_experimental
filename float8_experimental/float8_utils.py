@@ -10,6 +10,8 @@ from typing import Literal
 import torch
 import torch.distributed as dist
 
+import float8_experimental.config as config
+
 # Helpful visualizer for debugging (only supports fp32):
 # https://www.h-schmidt.net/FloatConverter/IEEE754.html
 
@@ -28,13 +30,42 @@ EPS = 1e-12
 IS_AMD = torch.cuda.is_available() and torch.version.hip is not None
 
 
+# Helper functions to get individual F8 types based on backend architecture
+def fp8_e4m3_t():
+    return torch.float8_e4m3fnuz if config.use_fnuz_dtype else torch.float8_e4m3fn
+
+def fp8_e5m2_t():
+    return torch.float8_e5m2fnuz if config.use_fnuz_dtype else torch.float8_e5m2
+
+def e4m3_max_pos():
+    return E4M3_FNUZ_MAX_POS if config.use_fnuz_dtype else E4M3_MAX_POS
+
+def e5m2_max_pos():
+    return E5M2_FNUZ_MAX_POS if config.use_fnuz_dtype else E5M2_MAX_POS
+
+AllFP8Dtypes = (torch.float8_e4m3fn, torch.float8_e5m2, torch.float8_e4m3fnuz, torch.float8_e5m2fnuz)
+
+
 @dataclass(frozen=True)
 class FP8Dtypes:
     """Defines the fp8 dtypes to be used in forward and backwrad computations"""
 
+    fp8_dtype_fw: torch.dtype = torch.float8_e4m3fn if not config.use_fnuz_dtype else torch.float8_e4m3fnuz
+    fp8_dtype_bw: torch.dtype = torch.float8_e5m2 if not config.use_fnuz_dtype else torch.float8_e5m2fnuz
+
+# Dataclasses used for testing
+@dataclass(frozen=True)
+class FP8FNUZDtypes:
+    """Defines the fp8 fnuz dtypes to be used in forward and backward computations"""
+    fp8_dtype_fw: torch.dtype = torch.float8_e4m3fnuz
+    fp8_dtype_bw: torch.dtype = torch.float8_e5m2fnuz
+
+
+@dataclass(frozen=True)
+class FP8FNDtypes:
+    """Defines the fp8 fnuz dtypes to be used in forward and backward computations"""
     fp8_dtype_fw: torch.dtype = torch.float8_e4m3fn
     fp8_dtype_bw: torch.dtype = torch.float8_e5m2
-
 
 @torch.no_grad()
 def amax_to_scale(

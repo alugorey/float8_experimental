@@ -19,3 +19,8 @@ enable_pre_and_post_forward = True
 # TODO(before land): add test coverage for both cases
 # dynamic_use_activation_hooks = True
 # dynamic_use_activation_hooks = False
+
+# If True, use 'fnuz' float8 types for calculations. If the backend
+# hardware does not support a particular type, the emulated implementation
+# of the dtype will be used. Currently, ROCm only supports the fnuz variants.
+use_fnuz_dtype = False
