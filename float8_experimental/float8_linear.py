@@ -26,7 +26,7 @@ from float8_experimental.float8_tensor import (
     to_fp8_no_autograd,
 )
 
-from float8_experimental.float8_utils import amax_history_to_scale, tensor_to_amax
+from float8_experimental.float8_utils import amax_history_to_scale, tensor_to_amax, e4m3_dtype, e5m2_dtype
 
 
 def _maybe_initialize_amaxes_scales_for_float8_cast(
@@ -92,14 +92,14 @@ class NoopFwToFloat8E5M2Bw(torch.autograd.Function):
             fp8_amax_history_dL_dY,
             fp8_scale_dL_dY,
             scale_fn_name,
-            torch.float8_e5m2,
+            e5m2_dtype,
             is_amax_initialized,
         )
 
         fp8_amax_dL_dY.fill_(tensor_to_amax(go))
 
         res = to_fp8_no_autograd(
-            go, fp8_scale_dL_dY, torch.float8_e5m2, mm_config=ctx.mm_config
+            go, fp8_scale_dL_dY, e5m2_dtype, mm_config=ctx.mm_config
         )
         empty_grads = None, None, None, None, None, None
         return res, *empty_grads
@@ -138,9 +138,9 @@ class Float8LinearMixin(object):
         history_len = self.recipe.history_len
 
         # Default values for history buffers, see above TODO
-        default_x = torch.finfo(torch.float8_e4m3fn).max
-        default_w = torch.finfo(torch.float8_e4m3fn).max
-        default_dl_dy = torch.finfo(torch.float8_e5m2).max
+        default_x = torch.finfo(e4m3_dtype).max
+        default_w = torch.finfo(e4m3_dtype).max
+        default_dl_dy = torch.finfo(e5m2_dtype).max
 
         self.register_always_float32_buffer("fp8_amax_x", torch.tensor([default_x]))
         self.register_always_float32_buffer(
@@ -223,13 +223,13 @@ class Float8LinearMixin(object):
             self.fp8_amax_history_x,
             self.fp8_scale_x,
             scale_fn_name,
-            torch.float8_e4m3fn,
+            e4m3_dtype,
             is_amax_initialized,
         )
         x_fp8 = Float8Tensor.to_float8(
             x,
             self.fp8_scale_x,
-            torch.float8_e4m3fn,
+            e4m3_dtype,
             self.fp8_amax_x,
             self.forward_config,
         )
@@ -245,14 +245,14 @@ class Float8LinearMixin(object):
             self.fp8_amax_history_w,
             self.fp8_scale_w,
             scale_fn_name,
-            torch.float8_e4m3fn,
+            e4m3_dtype,
             is_amax_initialized,
         )
 
         w_fp8 = Float8Tensor.to_float8(
             w,
             self.fp8_scale_w,
-            torch.float8_e4m3fn,
+            e4m3_dtype,
             self.fp8_amax_w,
             self.forward_config,
         )
