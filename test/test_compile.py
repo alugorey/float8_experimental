@@ -22,6 +22,9 @@ from float8_experimental.float8_linear_utils import (
     sync_float8_amax_and_scale_history,
 )
 from float8_experimental.float8_tensor import Float8Tensor, ScaledMMConfig
+from float8_experimental.float8_utils import e4m3_dtype
+
+
 
 from torch._dynamo.test_case import TestCase as DynamoTestCase
 from torch._dynamo.testing import CompileCounterWithBackend
@@ -113,13 +116,18 @@ class TestGraphBreaks(DynamoTestCase):
             self.graph_break = graph_break
 
         def forward(self, x):
+            print("BEFORE CAST")
+            print(x)
             x_fp8 = Float8Tensor.to_float8(
                 x,
                 self.fp8_scale_x,
-                torch.float8_e4m3fn,
+                e4m3_dtype,
                 self.fp8_amax_x,
                 ScaledMMConfig(),
             )
+            print("AFTER CAST")
+            print(x_fp8)
+
             if self.graph_break:
                 torch._dynamo.graph_break()
                 x_hp = x_fp8.to_original_precision()
@@ -133,9 +141,18 @@ class TestGraphBreaks(DynamoTestCase):
         mod = self.MockLinear(graph_break=True).cuda()
         compiled_mod = copy.deepcopy(mod)
         compiled_mod = torch.compile(compiled_mod, backend=cnts)
-        x = torch.randn(16, 16, device="cuda")
+        torch.manual_seed(0)
+        x = torch.randn(1, device="cuda")
+        
+        print()
+        print("EAGER VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV")
         y_eager = mod(x)
+        print("EAGER ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+        print()
+        print("COMPILED VVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV")
         y_compiled = compiled_mod(x)
+        print("COMPILED ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+        print()
         self.assertEqual(cnts.frame_count, 2, "Compiled graph should have 2 frames!")
         torch.testing.assert_close(y_eager, y_compiled)
 

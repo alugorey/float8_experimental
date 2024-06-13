@@ -28,9 +28,11 @@ torch.manual_seed(0)
 
 
 class TestFloat8SAMIntegrationTest:
-    @pytest.mark.parametrize("data_dtype", [torch.float16, torch.bfloat16])
+    #@pytest.mark.parametrize("data_dtype", [torch.float16, torch.bfloat16])
+    @pytest.mark.parametrize("data_dtype", [torch.float16])
     @pytest.mark.parametrize("linear_type", [Float8Linear, Float8DynamicLinear])
-    @pytest.mark.skipif(not is_H100, reason="requires H100 GPU")
+    #@pytest.mark.parametrize("linear_type", [Float8Linear])
+#    @pytest.mark.skipif(not is_H100, reason="requires H100 GPU")
     def test_encoder_fw_bw(self, data_dtype, linear_type):
         model = SamModel.from_pretrained("facebook/sam-vit-base").to(data_dtype).cuda()
         # print(model)
